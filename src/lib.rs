@@ -1,5 +1,4 @@
-use wgpu::Instance;
-use winit::{window::Window, event::WindowEvent};
+use winit::{window::{Window, WindowBuilder}, event::{WindowEvent, Event, VirtualKeyCode, ElementState, KeyboardInput}, event_loop::{EventLoop, ControlFlow}};
 
 struct State {
     surface: wgpu::Surface,
@@ -12,8 +11,9 @@ struct State {
 
 impl State {
     async fn new(window: Window) -> Self {
+        //THIS CANNOT BE 0
         let size = window.inner_size();
-        
+
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::all(),
             dx12_shader_compiler: Default::default(),
@@ -37,8 +37,34 @@ impl State {
             },
             None,
         ).await.unwrap();
-    
-        todo!()
+
+        let surface_caps = surface.get_capabilities(&adapter);
+        
+        let surface_format = surface_caps.formats.iter()
+            .copied()
+            .find(|f| f.is_srgb())
+            .unwrap_or(surface_caps.formats[0]);
+
+        let config = wgpu::SurfaceConfiguration {
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            format: surface_format,
+            width: size.width,
+            height: size.height,
+            present_mode: surface_caps.present_modes[0],
+            alpha_mode: surface_caps.alpha_modes[0],
+            view_formats: vec![],
+        };
+        
+        surface.configure(&device, &config);
+
+        Self {
+            window,
+            surface,
+            device,
+            queue,
+            config,
+            size,
+        }
     }
 
     pub fn window(&self) -> &Window {
@@ -60,4 +86,32 @@ impl State {
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
         todo!()
     }
+}
+
+pub async fn run() {
+    env_logger::init();
+    let event_loop = EventLoop::new();
+    let window = WindowBuilder::new().build(&event_loop).unwrap();
+
+    let mut state = State::new(window).await;
+
+    event_loop.run(move |event, _, control_flow| match event {
+        Event::WindowEvent {
+            ref event,
+            window_id,
+        } if window_id == window.id() => match event {
+            WindowEvent::CloseRequested
+            | WindowEvent::KeyboardInput {
+                input:
+                    KeyboardInput {
+                        state: ElementState::Pressed,
+                        virtual_keycode: Some(VirtualKeyCode::Escape),
+                        ..
+                    },
+                ..
+            } => *control_flow = ControlFlow::Exit,
+            _ => {}
+        },
+        _ => {}
+    });
 }

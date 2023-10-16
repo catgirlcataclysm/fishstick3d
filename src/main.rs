@@ -1,3 +1,4 @@
+use fishstick3d::run;
 fn main() {
-    print!("hi");
+    pollster::block_on(run());
 }
