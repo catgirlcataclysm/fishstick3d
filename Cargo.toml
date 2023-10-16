@@ -6,4 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-winit = "0.29.1-beta"
+env_logger = "0.10.0"
+log = "0.4.20"
+wgpu = "0.17.1"
+winit = "0.28.7"
