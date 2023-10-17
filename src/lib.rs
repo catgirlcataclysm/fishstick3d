@@ -1,4 +1,4 @@
-use winit::{window::{Window, WindowBuilder}, event::{WindowEvent, Event, VirtualKeyCode, ElementState, KeyboardInput}, event_loop::{EventLoop, ControlFlow}};
+use winit::{window::{Window, WindowBuilder, Theme}, event::{WindowEvent, Event, VirtualKeyCode, ElementState, KeyboardInput}, event_loop::{EventLoop, ControlFlow}};
 
 struct State {
     surface: wgpu::Surface,
@@ -72,19 +72,26 @@ impl State {
     }
 
     fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
-        todo!()
+        if new_size.width > 0 && new_size.height > 0 {
+            self.size = new_size;
+            self.config.width = new_size.width;
+            self.config.height = new_size.height;
+            self.surface.configure(&self.device, &self.config);
+        }
     }
 
     fn input(&mut self, event: &WindowEvent) -> bool {
-        todo!()
+        false
     }
 
     fn update(&mut self) {
-        todo!()
+    
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
-        todo!()
+       let output = self.surface.get_current_texture()?;
+       let view = output.texture.create_view(&wgpu::TextureViewDescriptor::default());
+       
     }
 }
 
@@ -92,6 +99,8 @@ pub async fn run() {
     env_logger::init();
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
+    window.set_title("fishstick3d");
+    window.set_theme(Some(Theme::Dark));
 
     let mut state = State::new(window).await;
 
@@ -99,7 +108,7 @@ pub async fn run() {
         Event::WindowEvent {
             ref event,
             window_id,
-        } if window_id == window.id() => match event {
+        } if window_id == state.window().id() => if !state.input(event) {
             WindowEvent::CloseRequested
             | WindowEvent::KeyboardInput {
                 input:
@@ -110,6 +119,16 @@ pub async fn run() {
                     },
                 ..
             } => *control_flow = ControlFlow::Exit,
+            
+            WindowEvent::Resized(physical_size) => {
+                state.resize(*physical_size);
+            }
+        
+            WindowEvent::ScaleFactorChanged {new_inner_size, ..} => {
+                state.resize(**new_inner_size);
+            }
+
+
             _ => {}
         },
         _ => {}
