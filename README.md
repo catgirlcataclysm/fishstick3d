@@ -1,5 +1,5 @@
 # fishstick3d
-funny 3d game engine project that
+funny 3d game engine project
 
 ~~literally draws a single triangle rn~~ i started over lmfao
 
